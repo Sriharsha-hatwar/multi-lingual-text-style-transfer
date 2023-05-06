@@ -15,78 +15,6 @@ wandb.login()
 
 metrics_pickle_data = []
 
-# class SamanantarHindiTranslationDataset(Dataset):
-#     def __init__(self, data: Dict[str, List[str]], tokenizer: MT5Tokenizer, source_max_length: int, target_max_length: int):
-#         self.tokenizer = tokenizer
-#         self.source_max_length = source_max_length
-#         self.target_max_length = target_max_length
-#         self.source_texts = data["src"]
-#         self.target_texts = data["tgt"]
-#         self.language_code = "hi "
-    
-#     def __len__(self):
-#         return len(self.source_texts)
-    
-#     def __getitem__(self, index):
-#         source_text =  self.language_code + str(self.source_texts[index])
-#         # Do we need to add in target text? - I dont think so.
-#         target_text = str(self.target_texts[index])
-
-#         # Tokenize the source and target texts
-#         source_tokenized = self.tokenizer(source_text, padding="max_length", truncation=True, max_length=self.source_max_length, return_tensors="pt")
-#         target_tokenized = self.tokenizer(target_text, padding="max_length", truncation=True, max_length=self.target_max_length, return_tensors="pt")
-
-#         source_ids = source_tokenized.input_ids.squeeze()
-#         source_mask = source_tokenized.attention_mask.squeeze()
-#         target_ids = target_tokenized.input_ids.squeeze()
-#         target_mask = target_tokenized.attention_mask.squeeze()
-
-#         return {
-#             "input_ids": source_ids,
-#             "attention_mask": source_mask,
-#             "decoder_input_ids": target_ids, 
-#             "decoder_attention_mask": target_mask,
-#             "labels": target_ids,
-#             "source_text" : source_text,
-#             "target_text" : target_text
-#         }
-
-# class SamanantarMarathiTranslationDataset(Dataset):
-#     def __init__(self, data: Dict[str, List[str]], tokenizer: MT5Tokenizer, source_max_length: int, target_max_length: int):
-#         self.tokenizer = tokenizer
-#         self.source_max_length = source_max_length
-#         self.target_max_length = target_max_length
-#         self.source_texts = data["src"]
-#         self.target_texts = data["tgt"]
-#         self.language_code = "mr "
-    
-#     def __len__(self):
-#         return len(self.source_texts)
-    
-#     def __getitem__(self, index):
-#         source_text =  self.language_code + str(self.source_texts[index])
-#         # Do we need to add in target text? - I dont think so.
-#         target_text = str(self.target_texts[index])
-
-#         # Tokenize the source and target texts
-#         source_tokenized = self.tokenizer(source_text, padding="max_length", truncation=True, max_length=self.source_max_length, return_tensors="pt")
-#         target_tokenized = self.tokenizer(target_text, padding="max_length", truncation=True, max_length=self.target_max_length, return_tensors="pt")
-
-#         source_ids = source_tokenized.input_ids.squeeze()
-#         source_mask = source_tokenized.attention_mask.squeeze()
-#         target_ids = target_tokenized.input_ids.squeeze()
-#         target_mask = target_tokenized.attention_mask.squeeze()
-
-#         return {
-#             "input_ids": source_ids,
-#             "attention_mask": source_mask,
-#             "decoder_input_ids": target_ids, 
-#             "decoder_attention_mask": target_mask,
-#             "labels": target_ids,
-#             "source_text" : source_text,
-#             "target_text" : target_text
-#         }
-
 class SamanantarHindiParaphraseDataset(Dataset):
     def __init__(self, data: Dict[str, List[str]], tokenizer: MT5Tokenizer, x_max_length: int, x_para_max_length: int, paraphrase_lang: str):
         self.tokenizer = tokenizer
@@ -363,14 +291,16 @@ def run(pretrained_model, device, train_dataset, val_dataset, num_epochs):
 def load_dataset(lang, tokenizer):
     # Please remove the range in the below code.
     if lang == "hindi":
-        dataset = load_from_disk("./data/hindi_paraphrase_dataset_80k", split = "train")
+        dataset = load_from_disk("./data/hindi_paraphrase_dataset_80k")
+        dataset = dataset["train"]
         dataset = dataset.train_test_split(test_size=0.2, seed=42)
         train_dataset = dataset["train"].shuffle(seed=42)
         val_dataset = dataset["test"].shuffle(seed=42)
         train_dataset_final = SamanantarHindiParaphraseDataset(train_dataset, tokenizer, 128, 128)
         val_dataset_final = SamanantarHindiParaphraseDataset(val_dataset, tokenizer, 128, 128)
     elif lang =="marathi":
-        dataset = load_from_disk("./data/marathi_paraphrase_dataset_20k", split = "train")
+        dataset = load_from_disk("./data/marathi_paraphrase_dataset_20k")
+        dataset = dataset["train"]
         dataset = dataset.train_test_split(test_size=0.2, seed=42)
         train_dataset = dataset["train"].shuffle(seed=42)
         val_dataset = dataset["test"].shuffle(seed=42)
@@ -411,7 +341,7 @@ if __name__ == "__main__":
 # Load the tokenizer and model
     tokenizer = MT5Tokenizer.from_pretrained("google/mt5-base")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    pretrained_model = MT5ForConditionalGeneration.from_pretrained("google/mt5-base").to(device)
+    pretrained_model = MT5ForConditionalGeneration.from_pretrainedMT5ForConditionalGeneration.from_pretrained('./checkpoints/objective_one/model_checkpointed').to(device)
     special_tokens = {'additional_special_tokens': ['<cls>']}
     num_added_toks = tokenizer.add_special_tokens(special_tokens)
     pretrained_model.resize_token_embeddings(len(tokenizer))
