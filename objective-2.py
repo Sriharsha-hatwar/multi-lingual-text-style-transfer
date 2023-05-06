@@ -87,14 +87,25 @@ class SamanantarMarathiTranslationDataset(Dataset):
             "target_text" : target_text
         }
 
-class MT5LanguageTranslationModel(nn.Module):
+class MT5ParaphraseModel(nn.Module):
     def __init__(self, model, device):
-        super(MT5LanguageTranslationModel, self).__init__()
+        super(MT5ParaphraseModel, self).__init__()
         self.device = device
         self.pretrainedmodel = model
 
-    def forward(self, batch_input_ids, batch_attention_mask, batch_labels):
-        outputs = self.pretrainedmodel(input_ids=batch_input_ids, attention_mask=batch_attention_mask, labels=batch_labels)
+    def forward(self, batch_x_ids, batch_x_para_ids):
+        with torch.no_grad():
+            style_x = self.pretrainedmodel.encoder(batch_x_ids).last_hidden_state[:,0, :]
+            style_para_x = self.pretrainedmodel.encoder(batch_x_para_ids).last_hidden_state[:, 0, :]
+            s_diff = style_para_x - style_x
+
+        batch_x_para_ids = batch_x_para_ids.type(torch.LongTensor).to(self.device)
+        s_diff = torch.unsqueeze(s_diff, dim=1).type(torch.LongTensor).to(self.device)
+        batch_x_ids = batch_x_ids.type(torch.LongTensor).to(self.device)
+
+        altered_encoder_hidden_states = self.pretrainedmodel.encoder(batch_x_para_ids).last_hidden_state + s_diff
+        outputs = self.pretrainedmodel.decoder(input_ids = batch_x_ids, encoder_hidden_states = altered_encoder_hidden_states)
+
         return outputs
 
 class AverageMeter:
@@ -247,21 +258,22 @@ def run(pretrained_model, device, train_dataset, val_dataset, num_epochs):
     loss_criterion = nn.CrossEntropyLoss() 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    early_stopping = EarlyStopping(patience = 6, mode = 'max')
+    early_stopping = EarlyStopping(patience = 6, mode = 'min')
     for epoch in range(num_epochs):
         if not early_stopping.early_stop:
             print("Starting epoch :", epoch)
             train_loss = train(model, batch_size, optimizer, train_loader, num_epochs, loss_criterion, device)
             val_loss = validation(model, batch_size, val_loader, loss_criterion, device)
             val_perplexity = calculate_validation_perplexity(val_loss)
-            val_bleu_score = calculate_validation_bleu(model, val_loader)
-            print(f"Epoch {epoch+1}: Train loss - {train_loss:.4f}, Val loss - {val_loss:.4f}, Val_bleu_score : {val_bleu_score:.4f}")
-            early_stopping(val_bleu_score, model, f'./checkpoints/objective_one/model_checkpointed')
-            wandb.log({"train_loss": train_loss, "val_loss": val_loss, "val_perplexity" : val_perplexity, "val_bleu_score" : val_bleu_score})
+            # Remember that objective two does not require bleu score.
+            #val_bleu_score = calculate_validation_bleu(model, val_loader)
+            print(f"Epoch {epoch+1}: Train loss - {train_loss:.4f}, Val loss - {val_loss:.4f}")
+            early_stopping(val_loss, model, f'./checkpoints/objective_two/model_checkpointed')
+            wandb.log({"train_loss": train_loss, "val_loss": val_loss, "val_perplexity" : val_perplexity})
             if early_stopping.early_stop:
                 print("early_stop is enforced.")
             # here, we need to store some of the metrics as a pickle file. 
-            metrics_pickle_data.append((train_loss, val_loss, val_perplexity, val_bleu_score))
+            metrics_pickle_data.append((train_loss, val_loss, val_perplexity))
 
         else:
             print("No training done for this epoch.")
@@ -295,7 +307,7 @@ def run_for_all_languages(pretrained_model, device, tokenizer, num_epochs):
             print("Starting Hindi..")
             train_dataset, val_dataset  = load_dataset(lang, tokenizer)
             # Need to check whether the model is available locally with updated parameters...
-            model = MT5LanguageTranslationModel(pretrained_model, device)
+            model = MT5ParaphraseModel(pretrained_model, device)
             run(model, device, train_dataset, val_dataset, num_epochs)
             print("Hindi language done..")
         else:
@@ -304,13 +316,13 @@ def run_for_all_languages(pretrained_model, device, tokenizer, num_epochs):
             print("Starting Marathi..")
             train_dataset, val_dataset  = load_dataset(lang, tokenizer)
             #checkpointed_model = MT5ForConditionalGeneration.from_pretrained("./checkpoints/objective_one/model_checkpointed.pth").to(device)
-            pretrained_model = MT5ForConditionalGeneration.from_pretrained('./checkpoints/objective_one/model_checkpointed').to(device)
-            checkpointed_model = MT5LanguageTranslationModel(pretrained_model, device)
+            pretrained_model = MT5ForConditionalGeneration.from_pretrained('./checkpoints/objective_two/model_checkpointed').to(device)
+            checkpointed_model = MT5ParaphraseModel(pretrained_model, device)
             run(checkpointed_model, device, train_dataset, val_dataset, num_epochs)
 
     # Now, when metrics_pickle_data is filled, store it as a pickle.
     pickle_data = {"metrics" : metrics_pickle_data}
-    with open('./data/pickles/objective_one_metrics.pickle', 'wb') as handle:
+    with open('./data/pickles/objective_two_metrics.pickle', 'wb') as handle:
         pickle.dump(pickle_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
         
 if __name__ == "__main__":
