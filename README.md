@@ -19,8 +19,8 @@ We used the [Samanantar](https://huggingface.co/datasets/ai4bharat/samanantar) a
 For training, we need to run the `objective-1.py`, `objective-1-back-translation.py`, `objective-2.py` and `objective-3.py` inside `implementations` folder. This will generate the pickles file necessary for the experiments. 
 
 ## Results and Evaluation
-- `visualizations.ipynb` inside `utis` folder is used to generate the plots for **Loss** and **BLEU Score**. 
-- `inference.ipynb` inside `utis` folder is used to do the inferencing experiments. 
+- `visualizations.ipynb` inside `utils` folder is used to generate the plots for **Loss** and **BLEU Score**. 
+- `inference.ipynb` inside `utils` folder is used to do the inferencing experiments. 
 - model checkpoints can be found here : https://drive.google.com/drive/folders/1Bpocd7847le1vGNkbIrhc4gZyp-JFTp_?usp=share_link
 
 ## Curated Dataset
