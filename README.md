@@ -13,7 +13,7 @@ The main pipeline:
 - wandb
 
 ## Data
-We used the [Samanantar](https://huggingface.co/datasets/ai4bharat/samanantar) and [mc4]()https://huggingface.co/datasets/mc4 datasets for our experiments. The paraphrase dataset needed to train Objective-2 can be generated using `hindi_paraphrase.py` and `marathi_paraphrase.py` inside `implemenations` folder.
+We used the [Samanantar](https://huggingface.co/datasets/ai4bharat/samanantar) and [mc4](https://huggingface.co/datasets/mc4) datasets for our experiments. The paraphrase dataset needed to train Objective-2 can be generated using `hindi_paraphrase.py` and `marathi_paraphrase.py` inside `implemenations` folder.
 
 ## Training
 For training, we need to run the `objective-1.py`, `objective-1-back-translation.py`, `objective-2.py` and `objective-3.py` inside `implementations` folder. This will generate the pickles file necessary for the experiments. 
