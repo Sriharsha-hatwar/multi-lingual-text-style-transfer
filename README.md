@@ -21,7 +21,7 @@ For training, we need to run the `objective-1.py`, `objective-1-back-translation
 ## Results and Evaluation
 - `visualizations.ipynb` inside `utils` folder is used to generate the plots for **Loss** and **BLEU Score**. 
 - `inference.ipynb` inside `utils` folder is used to do the inferencing experiments. 
-- model checkpoints can be found here : https://drive.google.com/drive/folders/1Bpocd7847le1vGNkbIrhc4gZyp-JFTp_?usp=share_link
+- model checkpoints can be found here : https://drive.google.com/drive/folders/1XP77_2lWKlL12JRzHznXFd2VJbs5FaGp?usp=share_link
 
 ## Curated Dataset
 The dataset we specifically curated to fasciliate multi-lingual, multi-attribute text style transfer can be found in `datasets` folder. It contains files for Hindi, Marathi, Kannada, and Bengali language. There is a file for each language with single attribute (Purity) and multi-attribute (Fomality + Purity). 
