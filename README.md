@@ -19,5 +19,8 @@ We used the [Samanantar](https://huggingface.co/datasets/ai4bharat/samanantar) a
 For training, we need to run the `objective-1.py`, `objective-1-back-translation.py`, `objective-2.py` and `objective-3.py` inside `implementations` folder. This will generate the pickles file necessary for the experiments. 
 
 ## Results and Evaluation
-- `visualizations.ipynb` is used to generate the plots for **Loss** and **BLEU Score**. 
-- `inference.ipynb` is used to do the inferencing experiments. 
+- `visualizations.ipynb` inside `utis` folder is used to generate the plots for **Loss** and **BLEU Score**. 
+- `inference.ipynb` inside `utis` folder is used to do the inferencing experiments. 
+
+## Curated Dataset
+The dataset we specifically curated to fasciliate multi-lingual, multi-attribute text style transfer can be found in `datasets` folder. It contains files for Hindi, Marathi, Kannada, and Bengali language. There is a file for each language with single attribute (Purity) and multi-attribute (Fomality + Purity). 
